@@ -3,6 +3,11 @@ name = "tetrahedron"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+clap = "4.1.11"
+noshell = { git = "https://github.com/eddieKaa/noshell.git", rev = "46c6c29" }
+
+[profile.release]
+strip = true
+lto = true
+panic = "abort"
