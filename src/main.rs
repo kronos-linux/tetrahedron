@@ -1,7 +1,7 @@
 use clap::Parser;
-use noshell::ShellCommand;
-use prelude::shrun;
+use prelude::*;
 
+mod assembly;
 mod error;
 mod prelude;
 
@@ -23,13 +23,20 @@ struct Args {
     /// Location of the temporary directory for portage to use
     #[arg(short, long)]
     assembly: Option<String>,
+
+    /// Keep temporary initramfs directory
+    #[arg(short, long)]
+    keep: bool,
 }
 
-fn main() {
+fn main() -> Result<()> {
     let args = Args::parse();
 
-    println!(
-        "{}",
-        shrun(&ShellCommand::new("echo").args(["Hello world"]))
-    );
+    if let Some(target) = args.assembly {
+        assembly::emerge_irfs(&target);
+    } else {
+        assembly::emerge_irfs("/usr/src/assembly");
+    }
+
+    Ok(())
 }
