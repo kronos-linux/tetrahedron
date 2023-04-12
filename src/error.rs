@@ -1,7 +1,7 @@
 #[derive(Debug)]
 pub enum Error {
     NoShell(String, String, String),
-    Generic(String),
+    // Generic(String),
 }
 
 impl Error {
@@ -13,7 +13,7 @@ impl Error {
                 "NoShell error:\n{}\nCommand: {}\nStderr:\n{}",
                 s, cmd, stderr
             ),
-            Self::Generic(s) => println!("Generic error:\n{}", s),
+            // Self::Generic(s) => println!("Generic error:\n{}", s),
         }
 
         std::process::exit(1);
