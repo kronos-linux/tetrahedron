@@ -1,9 +1,8 @@
-use std::process::{Command, Stdio};
+use std::process::{exit, Command, Stdio};
 
 use crate::prelude::*;
 
 pub fn emerge_irfs(assembly_target: &str) {
-    // rm -rf ff && mkdir ff && eselect profile set 1 && USE="" emerge -avnq1 --keep-going=y --ignore-world=y --deep --root=ff busybox && eselect profile set 9
     shrun(&ShellCommand::new("rm").args(["-rf", assembly_target]));
     shrun(&ShellCommand::new("mkdir").args(["-p", assembly_target]));
 
@@ -17,14 +16,26 @@ pub fn emerge_irfs(assembly_target: &str) {
 
     shrun(&ShellCommand::new("eselect").args(["profile", "set", "1"]));
 
-    emerge_pkg(assembly_target);
+    println!("Emerging necessary programs and libraries for the initramfs...");
+    match emerge_pkg(assembly_target, 0) {
+        Err(_) => {
+            println!("Failed to emerge initramfs 5 times. Aborting");
+            exit(1);
+        }
+        _ => (),
+    }
+    println!("Emerge complete");
 
     shrun(&ShellCommand::new("eselect").args(["profile", "set", &profile.to_string()]));
 }
 
-fn emerge_pkg(t: &str) {
-    Command::new("emerge")
-        .env("USE", "lvm kernel -openssl")
+fn emerge_pkg(t: &str, tri: u8) -> std::result::Result<(), ()> {
+    if tri == 5 {
+        return Err(());
+    }
+
+    if Command::new("emerge")
+        .env("USE", "lvm gcrypt urandom -openssl")
         .args([
             "-vnq",
             "--keep-going=y",
@@ -44,7 +55,13 @@ fn emerge_pkg(t: &str) {
         .spawn()
         .expect("Could not spawn emerge")
         .wait()
-        .expect("Failed emerge of initramfs programs");
+        .expect("Could not wait for emerge")
+        .success()
+    {
+        Ok(())
+    } else {
+        emerge_pkg(t, tri + 1)
+    }
 }
 
 fn get_profile() -> u8 {
