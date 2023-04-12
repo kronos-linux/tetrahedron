@@ -2,6 +2,7 @@ use clap::Parser;
 use prelude::*;
 
 mod assembly;
+mod collect;
 mod error;
 mod prelude;
 
@@ -32,11 +33,14 @@ struct Args {
 fn main() -> Result<()> {
     let args = Args::parse();
 
-    if let Some(target) = args.assembly {
-        assembly::emerge_irfs(&target);
+    let target = if let Some(t) = args.assembly {
+        t
     } else {
-        assembly::emerge_irfs("/usr/src/assembly");
-    }
+        "/usr/src/assembly".into()
+    };
+
+    assembly::emerge_irfs(&target);
+    collect::dependencies(&target);
 
     Ok(())
 }
