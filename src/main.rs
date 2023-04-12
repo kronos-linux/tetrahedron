@@ -5,6 +5,7 @@ mod assembly;
 mod collect;
 mod error;
 mod prelude;
+mod specfile;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -41,6 +42,8 @@ fn main() -> Result<()> {
 
     assembly::emerge_irfs(&target);
     collect::dependencies(&target);
+
+    specfile::create();
 
     Ok(())
 }
