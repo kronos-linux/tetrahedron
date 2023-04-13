@@ -1,3 +1,4 @@
+use crate::prelude::*;
 use std::{
     collections::HashSet,
     fs::File,
@@ -21,7 +22,18 @@ pub fn create(specfile_target: &str, binfile: &str, assembly_dir: &str) {
 
     let dirs = union(&[rdirs, decompose(&files)]);
 
-    compose(specfile_target, assembly_dir, dirs, files);
+    let lgcc: Vec<String> =
+        shrun(&ShellCommand::new("find").args(["/usr", "-name", "libgcc*.so.[1-9]"]))
+            .lines()
+            .map(|x| x.to_string())
+            .collect();
+    let syslibs = agglomerate(&lgcc[..]);
+    let sysdirs = decompose(&syslibs);
+
+    let mut specfile = File::create(specfile_target).expect("Failed to open target specfile");
+
+    compose(&mut specfile, assembly_dir, dirs, files);
+    compose(&mut specfile, "", sysdirs, syslibs);
     println!("Specfile created");
 }
 
@@ -63,8 +75,8 @@ fn get_lines(target: &str) -> Vec<String> {
     let b_reader = BufReader::new(f);
     b_reader
         .lines()
-        .collect::<Result<_, _>>()
-        .expect("Failed to read from buffer")
+        .collect::<std::result::Result<_, _>>()
+        .expect("Failed to read target file")
 }
 
 fn union(a: &[HashSet<String>]) -> HashSet<String> {
@@ -77,9 +89,7 @@ fn union(a: &[HashSet<String>]) -> HashSet<String> {
     h
 }
 
-fn compose(t: &str, a: &str, dirs: HashSet<String>, files: HashSet<String>) {
-    let mut specfile = File::create(t).expect("Failed to open target specfile");
-
+fn compose(specfile: &mut File, a: &str, dirs: HashSet<String>, files: HashSet<String>) {
     for d in dirs {
         let w_str = format!("dir\t{}\t{}", d, PERMS);
         writeln!(specfile, "{}", w_str).expect("Failed to write to specfile");
