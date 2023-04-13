@@ -3,6 +3,7 @@ use prelude::*;
 
 mod assembly;
 mod collect;
+mod construct;
 mod error;
 mod prelude;
 mod specfile;
@@ -56,6 +57,8 @@ fn main() -> Result<()> {
     }
 
     shrun(&ShellCommand::new("rm").args(["-rf", &asm_target]));
+
+    construct::initramfs_dir();
 
     Ok(())
 }
