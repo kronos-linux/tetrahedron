@@ -51,5 +51,11 @@ fn main() -> Result<()> {
 
     specfile::create(&spec_target, "/bins.txt", &asm_target);
 
+    if args.keep {
+        return Ok(());
+    }
+
+    shrun(&ShellCommand::new("rm").args(["-rf", &asm_target]));
+
     Ok(())
 }
