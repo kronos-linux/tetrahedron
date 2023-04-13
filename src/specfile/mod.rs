@@ -1,9 +1,5 @@
 use crate::prelude::*;
-use std::{
-    collections::HashSet,
-    fs::File,
-    io::{BufRead, BufReader, Write},
-};
+use std::{collections::HashSet, fs::File, io::Write};
 
 static DELIM: &str = "/";
 static PERMS: &str = "755 0 0";
@@ -13,7 +9,7 @@ static ROOT_DIRS: [&str; 11] = [
 
 pub fn create(specfile_target: &str, binfile: &str, assembly_dir: &str) {
     println!("Creating the specfile...");
-    let files = get_lines(&(String::from(assembly_dir) + binfile));
+    let files = crate::prelude::get_lines(&(String::from(assembly_dir) + binfile));
     let files = agglomerate(&files);
     let mut rdirs = HashSet::new();
     for d in ROOT_DIRS {
@@ -68,15 +64,6 @@ fn decompose(strings: &HashSet<String>) -> HashSet<String> {
     }
 
     h
-}
-
-fn get_lines(target: &str) -> Vec<String> {
-    let f = File::open(target).expect(&format!("Failed to open target file: {}", target));
-    let b_reader = BufReader::new(f);
-    b_reader
-        .lines()
-        .collect::<std::result::Result<_, _>>()
-        .expect("Failed to read target file")
 }
 
 fn union(a: &[HashSet<String>]) -> HashSet<String> {

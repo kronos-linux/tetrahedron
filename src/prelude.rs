@@ -1,3 +1,8 @@
+use std::{
+    fs::File,
+    io::{BufRead, BufReader},
+};
+
 pub use crate::error::*;
 
 pub type Result<T> = core::result::Result<T, Error>;
@@ -15,4 +20,13 @@ pub fn shrun(cmd: &ShellCommand) -> String {
             Error::NoShell(estr, cmd_name, e).handle()
         }
     }
+}
+
+pub fn get_lines(target: &str) -> Vec<String> {
+    let f = File::open(target).expect(&format!("Failed to open target file: {}", target));
+    let b_reader = BufReader::new(f);
+    b_reader
+        .lines()
+        .collect::<std::result::Result<_, _>>()
+        .expect("Failed to read target file")
 }
