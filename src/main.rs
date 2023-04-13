@@ -3,6 +3,7 @@ use prelude::*;
 
 mod assembly;
 mod collect;
+mod construct;
 mod error;
 mod prelude;
 mod specfile;
@@ -51,11 +52,15 @@ fn main() -> Result<()> {
 
     specfile::create(&spec_target, "/bins.txt", &asm_target);
 
-    if args.keep {
-        return Ok(());
+    match (args.construct, args.directory) {
+        (_, Some(d)) => construct::initramfs_dir(&d, &spec_target),
+        (true, None) => construct::initramfs_dir("/usr/src/initramfs", &spec_target),
+        (false, None) => (),
     }
 
-    shrun(&ShellCommand::new("rm").args(["-rf", &asm_target]));
+    if !args.keep {
+        shrun(&ShellCommand::new("rm").args(["-rf", &asm_target]));
+    }
 
     Ok(())
 }
