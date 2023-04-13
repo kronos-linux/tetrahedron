@@ -5,15 +5,16 @@ mod assembly;
 mod collect;
 mod error;
 mod prelude;
+mod specfile;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    /// Construst an initramfs directory instead of printing a specfile
+    /// Construst an initramfs directory instead of just creating a specfile
     #[arg(short, long)]
     construct: bool,
 
-    /// Specify the path of the initramfs directory
+    /// Specify the path of the initramfs directory. Implies -c
     #[arg(short, long)]
     directory: Option<String>,
 
@@ -33,14 +34,28 @@ struct Args {
 fn main() -> Result<()> {
     let args = Args::parse();
 
-    let target = if let Some(t) = args.assembly {
+    let asm_target = if let Some(t) = args.assembly {
         t
     } else {
         "/usr/src/assembly".into()
     };
 
-    assembly::emerge_irfs(&target);
-    collect::dependencies(&target);
+    assembly::emerge_irfs(&asm_target);
+    collect::dependencies(&asm_target);
+
+    let spec_target = if let Some(t) = args.output {
+        t
+    } else {
+        "/usr/src/initramfs.spec".into()
+    };
+
+    specfile::create(&spec_target, "/bins.txt", &asm_target);
+
+    if args.keep {
+        return Ok(());
+    }
+
+    shrun(&ShellCommand::new("rm").args(["-rf", &asm_target]));
 
     Ok(())
 }
