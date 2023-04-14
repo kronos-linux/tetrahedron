@@ -3,8 +3,8 @@ use std::{collections::HashSet, fs::File, io::Write};
 
 static DELIM: &str = "/";
 static PERMS: &str = "755 0 0";
-static ROOT_DIRS: [&str; 11] = [
-    "bin", "dev", "lib", "lib64", "mnt", "root", "proc", "sbin", "sys", "run", "usr",
+static ROOT_DIRS: [&str; 12] = [
+    "bin", "dev", "lib", "lib64", "mnt", "root", "proc", "sbin", "sys", "run", "usr", "etc",
 ];
 
 pub fn create(specfile_target: &str, binfile: &str, assembly_dir: &str) {
@@ -18,11 +18,15 @@ pub fn create(specfile_target: &str, binfile: &str, assembly_dir: &str) {
 
     let dirs = union(&[rdirs, decompose(&files)]);
 
-    let lgcc: Vec<String> =
-        shrun(&ShellCommand::new("find").args(["/usr", "-name", "libgcc*.so.[1-9]"]))
-            .lines()
-            .map(|x| x.to_string())
-            .collect();
+    let find_lgcc = shrun(&ShellCommand::new("find").args(["/usr", "-name", "libgcc*.so.[1-9]"]));
+    let lgcc: Vec<String> = shrun(
+        &ShellCommand::new("grep")
+            .pipe_string(find_lgcc)
+            .args(["-v", "32"]),
+    )
+    .lines()
+    .map(|x| x.to_string())
+    .collect();
     let syslibs = agglomerate(&lgcc[..]);
     let sysdirs = decompose(&syslibs);
 
@@ -30,6 +34,13 @@ pub fn create(specfile_target: &str, binfile: &str, assembly_dir: &str) {
 
     compose(&mut specfile, assembly_dir, dirs, files);
     compose(&mut specfile, "", sysdirs, syslibs);
+
+    for s in lgcc {
+        let exp = format!("s|file\t{}|file\t/lib64/libgcc_s.so.1|g", s);
+
+        shrun(&ShellCommand::new("sed").args(["-i", "-e", &exp, specfile_target]));
+    }
+
     println!("Specfile created");
 }
 

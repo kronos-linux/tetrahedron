@@ -38,7 +38,7 @@ fn main() -> Result<()> {
     let asm_target = if let Some(t) = args.assembly {
         t
     } else {
-        "/usr/src/assembly".into()
+        "/tmp/assembly".into()
     };
 
     assembly::emerge_irfs(&asm_target);
