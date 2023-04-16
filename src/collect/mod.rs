@@ -5,11 +5,10 @@ pub fn dependencies(t: &str) {
     let th = format!("{}/hunter.sh", &t);
 
     {
-        let mut h = File::create(&th).unwrap();
         write!(
-        h,
+        File::create(&th).expect("Failed to create a hunter script"),
         "{}",
-        "#!/bin/bash -e\n/bin/busybox --install -s\nlddtree -l \"$(which busybox)\" \"$(which cryptsetup)\" \"$(which gpg)\" \"$(which lvm)\" > /bins.txt\n")
+        "#!/bin/bash -e\n/bin/busybox --install -s\nlddtree -l \"$(which busybox)\" \"$(which cryptsetup)\" \"$(which gpg)\" \"$(which lvm)\" > /bins.txt\necho \"/init\" >> /bins.txt\n")
         .expect("Failed to create the hunter script")
     }
 

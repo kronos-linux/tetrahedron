@@ -48,6 +48,7 @@ fn emerge_pkg(t: &str, tri: u8) -> std::result::Result<(), ()> {
             "app-crypt/gnupg",
             "app-shells/bash",
             "app-misc/pax-utils",
+            "sys-boot/ouroboros",
         ])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
